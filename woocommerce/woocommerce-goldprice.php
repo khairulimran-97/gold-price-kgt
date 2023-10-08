@@ -1,36 +1,111 @@
 <?php
 
-function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
+// Define a global variable to store the API data
+global $api_data;
 
-    if ( $product->is_type( 'variation' ) ) {
-        $metal_price = get_post_meta( $product->get_parent_id(), 'gpw_metal_price', true );
-    } else {
-        $metal_price = get_post_meta( $product->get_id(), 'gpw_metal_price', true );
+// Function to fetch data from the API and set the global variable
+function fetch_api_data() {
+    global $api_data;
+
+    // Make an HTTP request to the API
+    $api_url = 'https://kgt.com.my/rest/api.php';
+    $api_response = wp_safe_remote_get( $api_url );
+
+    // Check if the API request was successful
+    if ( ! is_wp_error( $api_response ) && wp_remote_retrieve_response_code( $api_response ) === 200 ) {
+        // Parse the API response as JSON
+        $api_data = json_decode( wp_remote_retrieve_body( $api_response ), true );
     }
-        $price = $product->get_weight() * $metal_price;
+}
+
+// Call the function to fetch API data (you can call this at the start of your code)
+fetch_api_data();
+
+// Function to maybe alter product price excluding tax
+function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
+    global $api_data;
+
+    // Check if $product is a variation
+    if ( $product->is_type( 'variation' ) ) {
+
+        // Get the value of $jenis_produk from the parent product
+        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+    } else {
+        // Get the value of $jenis_produk from the current product
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+    }
+    $price = 0;
+    // Check if API data is available
+    if ( isset( $api_data ) ) {
+        // Check the value of $jenis_produk and set the price accordingly
+        if ( $jenis_produk === 'dinar' ) {
+            // Set the price based on harga_nilai
+            $price = $api_data['harga_nilai'] * $nilai_kgt;
+        } elseif ( $jenis_produk === 'wafer' ) {
+            // Set the price based on harga_wafer
+            $price = $api_data['harga_wafer'];
+        }
+    }
+
     return $price;
 }
 
 function maybe_alter_product_price( $price, $product ){
 
+    global $api_data;
+
+    // Check if $product is a variation
     if ( $product->is_type( 'variation' ) ) {
-        $metal_price = get_post_meta( $product->get_parent_id(), 'gpw_metal_price', true );
+        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
     } else {
-        $metal_price = get_post_meta( $product->get_id(), 'gpw_metal_price', true );
+        // Get the value of $jenis_produk from the current product
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
     }
-        $price = $product->get_weight() * $metal_price;
+    $price = 0;
+    // Check if API data is available
+    if ( isset( $api_data ) ) {
+        // Check the value of $jenis_produk and set the price accordingly
+        if ( $jenis_produk === 'dinar' ) {
+            // Set the price based on harga_nilai
+            $price = $api_data['harga_nilai'] * $nilai_kgt;
+        } elseif ( $jenis_produk === 'wafer' ) {
+            // Set the price based on harga_wafer
+            $price = $api_data['harga_wafer'];
+        }
+    }
+
     return $price;
 }
 
 function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id ){
-
+    global $api_data;
     $product = wc_get_product( $product_id );
+
     if ( $product->is_type( 'variation' ) ) {
-        $metal_price = get_post_meta( $product->get_parent_id(), 'gpw_metal_price', true );
+        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
     } else {
-        $metal_price = get_post_meta( $product_id, 'gpw_metal_price', true );
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
     }
-    $price = $product->get_weight() * $metal_price;
+    $price = 0;
+
+    // Check if API data is available
+    if ( isset( $api_data ) ) {
+        // Check the value of $jenis_produk and set the price accordingly
+        if ( $jenis_produk === 'dinar' ) {
+            // Set the price based on harga_nilai
+            $price = $api_data['harga_nilai'] * $nilai_kgt;
+        } elseif ( $jenis_produk === 'wafer' ) {
+            // Set the price based on harga_wafer
+            $price = $api_data['harga_wafer'];
+        }
+    }
+
     $cart_item_data['altered_price'] = $price;
     return $cart_item_data;
 }
@@ -55,23 +130,3 @@ add_filter( 'woocommerce_variation_prices_price', 'maybe_alter_product_price', 9
 add_filter( 'woocommerce_variation_prices_regular_price', 'maybe_alter_product_price', 99, 2 );
 add_filter( 'woocommerce_add_cart_item_data', 'maybe_alter_cart_item_data', 99, 3 );
 add_action( 'woocommerce_before_calculate_totals', 'maybe_alter_calculate_totals', 99, 1 );
-
-/**
- * @snippet       Display Weight @ Cart & Checkout - WooCommerce
- * @how-to        Get CustomizeWoo.com FREE
- * @author        Rodolfo Melogli
- * @compatible    WC 3.9
- * @donate $9     https://businessbloomer.com/bloomer-armada/
- */
-  
-add_action( 'woocommerce_before_checkout_form', 'bbloomer_print_cart_weight' );
-add_action( 'woocommerce_before_cart', 'bbloomer_print_cart_weight' );
-  
-function bbloomer_print_cart_weight() {
-   $notice = 'Your cart weight is: ' . WC()->cart->get_cart_contents_weight() . get_option( 'woocommerce_weight_unit' );
-   if ( is_cart() ) {
-      wc_print_notice( $notice, 'notice' );
-   } else {
-      wc_add_notice( $notice, 'notice' );
-   }
-}
