@@ -73,7 +73,9 @@ function action_woocommerce_variation_options( $loop, $variation_data, $variatio
     </label>
 
     <div class="cage_code_options_group options_group" style="display: <?php echo $display_style; ?>">
-        <?php woocommerce_wp_text_input( array(
+        <?php 
+        
+        woocommerce_wp_text_input( array(
             'id'            => '_nilai_kgt[' . $loop . ']',
             'class'         => 'short',
             'label'         => __( 'Nilai Produk', 'woocommerce' ),
@@ -84,7 +86,23 @@ function action_woocommerce_variation_options( $loop, $variation_data, $variatio
             'wrapper_class' => 'form-field form-row form-row-first',
             'description' => __('Masukkan nilai produk seperti 1,2,3,1/2 atau 1/4', 'woocommerce'),
             'value'         => get_post_meta( $variation->ID, '_nilai_kgt', true )
-        )); ?>
+        ));
+        
+        // Select field
+        woocommerce_wp_select( array(
+            'id' => '_jenis_produk[' . $loop . ']',
+            'label' => __('Jenis Produk KGT', 'woocommerce'),
+            'wrapper_class' => 'form-field form-row form-row-last',
+            'options' => array(
+                'dinar' => __('Dinar', 'woocommerce'),
+                'wafer' => __('Wafer', 'woocommerce'),
+            ),
+            'desc_tip' => 'true',
+            'description' => __('Select an option.', 'woocommerce'),
+            'value'         => get_post_meta( $variation->ID, '_jenis_produk', true )
+        ));
+        
+        ?>
     </div>
 
     <script>
@@ -121,5 +139,8 @@ function rudr_save_fields( $variation_id, $loop ) {
 	// Text Field
 	$text_field = ! empty( $_POST[ '_nilai_kgt' ][ $loop ] ) ? $_POST[ '_nilai_kgt' ][ $loop ] : '';
 	update_post_meta( $variation_id, '_nilai_kgt', sanitize_text_field( $text_field ) );
+    
+    $text_field = ! empty( $_POST[ '_jenis_produk' ][ $loop ] ) ? $_POST[ '_jenis_produk' ][ $loop ] : '';
+	update_post_meta( $variation_id, '_jenis_produk', sanitize_text_field( $text_field ) );
 
 }

@@ -25,18 +25,11 @@ fetch_api_data();
 function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
     global $api_data;
 
-    // Check if $product is a variation
-    if ( $product->is_type( 'variation' ) ) {
-
-        // Get the value of $jenis_produk from the parent product
-        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    } else {
-        // Get the value of $jenis_produk from the current product
-        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    }
+    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+    
     $price = 0;
+    
     // Check if API data is available
     if ( isset( $api_data ) ) {
         // Check the value of $jenis_produk and set the price accordingly
@@ -45,7 +38,7 @@ function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
             $price = $api_data['harga_nilai'] * $nilai_kgt;
         } elseif ( $jenis_produk === 'wafer' ) {
             // Set the price based on harga_wafer
-            $price = $api_data['harga_wafer'];
+            $price = $api_data['harga_wafer'] * $nilai_kgt;
         }
     }
 
@@ -56,16 +49,11 @@ function maybe_alter_product_price( $price, $product ){
 
     global $api_data;
 
-    // Check if $product is a variation
-    if ( $product->is_type( 'variation' ) ) {
-        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    } else {
-        // Get the value of $jenis_produk from the current product
-        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    }
+    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+    
     $price = 0;
+
     // Check if API data is available
     if ( isset( $api_data ) ) {
         // Check the value of $jenis_produk and set the price accordingly
@@ -74,7 +62,7 @@ function maybe_alter_product_price( $price, $product ){
             $price = $api_data['harga_nilai'] * $nilai_kgt;
         } elseif ( $jenis_produk === 'wafer' ) {
             // Set the price based on harga_wafer
-            $price = $api_data['harga_wafer'];
+            $price = $api_data['harga_wafer'] * $nilai_kgt;
         }
     }
 
@@ -85,13 +73,9 @@ function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id
     global $api_data;
     $product = wc_get_product( $product_id );
 
-    if ( $product->is_type( 'variation' ) ) {
-        $jenis_produk = get_post_meta( $product->get_parent_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    } else {
-        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    }
+    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+    
     $price = 0;
 
     // Check if API data is available
@@ -102,7 +86,7 @@ function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id
             $price = $api_data['harga_nilai'] * $nilai_kgt;
         } elseif ( $jenis_produk === 'wafer' ) {
             // Set the price based on harga_wafer
-            $price = $api_data['harga_wafer'];
+            $price = $api_data['harga_wafer'] * $nilai_kgt;
         }
     }
 
@@ -128,5 +112,7 @@ add_filter( 'woocommerce_product_get_price', 'maybe_alter_product_price', 99, 2 
 add_filter( 'woocommerce_get_price_excluding_tax', 'maybe_alter_product_price_excluding_tax', 99, 3 );
 add_filter( 'woocommerce_variation_prices_price', 'maybe_alter_product_price', 99, 2 );
 add_filter( 'woocommerce_variation_prices_regular_price', 'maybe_alter_product_price', 99, 2 );
+add_filter('woocommerce_product_variation_get_regular_price', 'maybe_alter_product_price', 99, 2 );
+add_filter('woocommerce_product_variation_get_price', 'maybe_alter_product_price' , 99, 2 );
 add_filter( 'woocommerce_add_cart_item_data', 'maybe_alter_cart_item_data', 99, 3 );
 add_action( 'woocommerce_before_calculate_totals', 'maybe_alter_calculate_totals', 99, 1 );
