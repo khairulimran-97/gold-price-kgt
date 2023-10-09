@@ -2,6 +2,26 @@
 // Display custom fields in the "General" tab of the product edit page
 add_action('woocommerce_product_options_general_product_data', 'add_custom_product_fields');
 
+
+add_filter( 'product_type_options', 'add_enable_api_price_product_option' );
+function add_enable_api_price_product_option( $product_type_options ) {
+    $product_type_options['enable_api_price'] = array(
+        'id'            => '_enable_api_price',
+        'wrapper_class' => 'show_if_simple',
+        'label'         => __( 'Enable API Price', 'woocommerce' ),
+        'description'   => __( 'Enable this option to use API pricing for the product.', 'woocommerce' ),
+        'default'       => 'no'
+    );
+
+    return $product_type_options;
+}
+
+add_action( 'woocommerce_process_product_meta_simple', 'save_enable_api_price_option_fields'  );
+function save_enable_api_price_option_fields( $post_id ) {
+    $enable_api_price = isset( $_POST['_enable_api_price'] ) ? 'yes' : 'no';
+    update_post_meta( $post_id, '_enable_api_price', $enable_api_price );
+}
+
 function add_custom_product_fields()
 {
     global $product_object;
@@ -36,7 +56,35 @@ function add_custom_product_fields()
     );
 
     echo '</div>';
+
+    // Fetch current value of _enable_api_price
+    $enable_api_price_value = get_post_meta($product_object->get_id(), '_enable_api_price', true);
+
+    ?>
+    <script type="text/javascript">
+        jQuery(function($){
+            var enableApiPriceCheckbox = $('#_enable_api_price');
+
+            // Initial state based on database value
+            toggleCustomFields(enableApiPriceCheckbox.prop('checked'));
+
+            // Toggle fields on checkbox change
+            enableApiPriceCheckbox.change(function(){
+                toggleCustomFields($(this).prop('checked'));
+            });
+
+            function toggleCustomFields(show){
+                if(show){
+                    $('.product_custom_fields').show();
+                } else {
+                    $('.product_custom_fields').hide();
+                }
+            }
+        });
+    </script>
+    <?php
 }
+
 
 // Save custom fields when the product is saved
 add_action('woocommerce_process_product_meta', 'save_custom_product_fields');
@@ -56,7 +104,7 @@ function save_custom_product_fields($product_id)
 
 // Add checkbox and custom field
 function action_woocommerce_variation_options( $loop, $variation_data, $variation ) {
-    $is_checked = get_post_meta( $variation->ID, '_mycheckbox', true );
+    $is_checked = get_post_meta( $variation->ID, '_enable_api_price', true );
 
     if ( $is_checked == 'yes' ) {
         $is_checked = 'checked';
@@ -67,9 +115,9 @@ function action_woocommerce_variation_options( $loop, $variation_data, $variatio
     }
 
     ?>
-    <label class="tips" data-tip="<?php esc_attr_e( 'This is my data tip', 'woocommerce' ); ?>">
+    <label class="tips" data-tip="<?php esc_attr_e( 'Using price from api gold price', 'woocommerce' ); ?>">
         <?php esc_html_e( 'Checkbox:', 'woocommerce' ); ?>
-        <input type="checkbox" class="checkbox variable_checkbox" name="_mycheckbox[<?php echo esc_attr( $loop ); ?>]"<?php echo $is_checked; ?>/>
+        <input type="checkbox" class="checkbox variable_checkbox" name="_enable_api_price[<?php echo esc_attr( $loop ); ?>]"<?php echo $is_checked; ?>/>
     </label>
 
     <div class="cage_code_options_group options_group" style="display: <?php echo $display_style; ?>">
@@ -124,10 +172,10 @@ add_action( 'woocommerce_variation_options', 'action_woocommerce_variation_optio
 
 // Save checkbox
 function action_woocommerce_save_product_variation( $variation_id, $i ) {
-    if ( ! empty( $_POST['_mycheckbox'] ) && ! empty( $_POST['_mycheckbox'][$i] ) ) {
-        update_post_meta( $variation_id, '_mycheckbox', 'yes' );
+    if ( ! empty( $_POST['_enable_api_price'] ) && ! empty( $_POST['_enable_api_price'][$i] ) ) {
+        update_post_meta( $variation_id, '_enable_api_price', 'yes' );
     } else {
-        update_post_meta( $variation_id, '_mycheckbox', 'no' );
+        update_post_meta( $variation_id, '_enable_api_price', 'no' );
     }
 }
 add_action( 'woocommerce_save_product_variation', 'action_woocommerce_save_product_variation', 10, 2 );

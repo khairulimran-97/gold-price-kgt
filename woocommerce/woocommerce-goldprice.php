@@ -22,16 +22,16 @@ function fetch_api_data() {
 fetch_api_data();
 
 // Function to maybe alter product price excluding tax
-function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
+function maybe_alter_product_price_excluding_tax( $price, $qty, $product ) {
     global $api_data;
 
-    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    
-    $price = 0;
-    
-    // Check if API data is available
-    if ( isset( $api_data ) ) {
+    $enable_api_price = get_post_meta( $product->get_id(), '_enable_api_price', true );
+
+    // Check if API data is available and _enable_api_price is set to 'yes'
+    if ( isset( $api_data ) && $enable_api_price === 'yes' ) {
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+
         // Check the value of $jenis_produk and set the price accordingly
         if ( $jenis_produk === 'dinar' ) {
             // Set the price based on harga_nilai
@@ -44,18 +44,19 @@ function maybe_alter_product_price_excluding_tax( $price, $qty, $product ){
 
     return $price;
 }
+
 
 function maybe_alter_product_price( $price, $product ){
 
     global $api_data;
 
-    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    
-    $price = 0;
+    $enable_api_price = get_post_meta( $product->get_id(), '_enable_api_price', true );
 
-    // Check if API data is available
-    if ( isset( $api_data ) ) {
+    // Check if API data is available and _enable_api_price is set to 'yes'
+    if ( isset( $api_data ) && $enable_api_price === 'yes' ) {
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+
         // Check the value of $jenis_produk and set the price accordingly
         if ( $jenis_produk === 'dinar' ) {
             // Set the price based on harga_nilai
@@ -69,17 +70,17 @@ function maybe_alter_product_price( $price, $product ){
     return $price;
 }
 
-function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id ){
+function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id ) {
     global $api_data;
     $product = wc_get_product( $product_id );
 
-    $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
-    $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
-    
-    $price = 0;
+    $enable_api_price = get_post_meta( $product->get_id(), '_enable_api_price', true );
 
-    // Check if API data is available
-    if ( isset( $api_data ) ) {
+    // Check if API data is available and _enable_api_price is set to 'yes'
+    if ( isset( $api_data ) && $enable_api_price === 'yes' ) {
+        $jenis_produk = get_post_meta( $product->get_id(), '_jenis_produk', true );
+        $nilai_kgt = get_post_meta( $product->get_id(), '_nilai_kgt', true );
+
         // Check the value of $jenis_produk and set the price accordingly
         if ( $jenis_produk === 'dinar' ) {
             // Set the price based on harga_nilai
@@ -88,11 +89,13 @@ function maybe_alter_cart_item_data( $cart_item_data, $product_id, $variation_id
             // Set the price based on harga_wafer
             $price = $api_data['harga_wafer'] * $nilai_kgt;
         }
+
+        $cart_item_data['altered_price'] = $price;
     }
 
-    $cart_item_data['altered_price'] = $price;
     return $cart_item_data;
 }
+
 
 
 function maybe_alter_calculate_totals( $cart_obj ) {
