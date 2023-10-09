@@ -26,7 +26,18 @@ function add_custom_product_fields()
 {
     global $product_object;
 
-    echo '<div class="product_custom_fields">';
+    echo '<table style="display:inline-block; margin-left:5px; margin-top:10px;">';
+    echo '<tr style="display:inline-block;"><th>Denominasi </th><th>Dinar</th></tr>';
+    echo '<tr style="display:inline-block;"><td>1/4 = </td><td><strong>0.25</strong></td></tr>';
+    echo '<tr style="display:inline-block;"><td>1/2 = </td><td><b>0.5</b></td></tr>';
+    //echo '<tr style="display:inline-block;"><td>1/8 = </td><td><b>0.125</b></td></tr>';
+    echo '</table>';
+
+
+    
+
+
+    echo '<div class="product_custom_fields">';    
 
     // Text field
     woocommerce_wp_text_input(
@@ -39,7 +50,7 @@ function add_custom_product_fields()
             'custom_attributes' => array( 'step' => 'any', 'min' => '0' ),
             'description' => __('Masukkan nilai produk seperti 1,2,3,1/2 atau 1/4', 'woocommerce')
         )
-    );
+    );   
 
     // Select field
     woocommerce_wp_select(
@@ -116,7 +127,7 @@ function action_woocommerce_variation_options( $loop, $variation_data, $variatio
 
     ?>
     <label class="tips" data-tip="<?php esc_attr_e( 'Using price from api gold price', 'woocommerce' ); ?>">
-        <?php esc_html_e( 'Checkbox:', 'woocommerce' ); ?>
+        <?php esc_html_e( 'Enable API Price?', 'woocommerce' ); ?>
         <input type="checkbox" class="checkbox variable_checkbox" name="_enable_api_price[<?php echo esc_attr( $loop ); ?>]"<?php echo $is_checked; ?>/>
     </label>
 
