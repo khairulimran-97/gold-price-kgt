@@ -15,7 +15,7 @@ This WordPress plugin for WooCommerce allows you to dynamically adjust product p
 
 ## Installation
 
-1. Upload the plugin files to the `/wp-content/plugins/woocommerce-api-price-adjustment` directory.
+1. Upload the plugin files to the `/wp-content/plugins` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 
 ## Configuration
